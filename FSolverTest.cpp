@@ -6,7 +6,7 @@
 
 // --------------------------------------------------------------------------------
 // Compile with:
-//     g++ FSolverTest.cpp FSolver.cpp -o FSolverTest `python3-config --embed --cflags --libs`
+//     g++ FSolverTest.cpp FSolver.cpp -o FSolverTest `python3-config --embed --cflags --ldflags`
 // Maybe a useful flag to have Python3 inside conda env:
 //     -L$CONDA_PREFIX/lib -Wl,--rpath=$CONDA_PREFIX/lib
 // --------------------------------------------------------------------------------
