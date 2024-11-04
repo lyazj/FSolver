@@ -1,15 +1,15 @@
 #include "FSolver.h"
 
-#include <stdexcept>
+#include <cstdlib>
+#include <string>
 
+#define PY_SSIZE_T_CLEAN
 #include "Python.h"
-
-using std::operator""s;
 
 static PyObject *Py_Resolve(const char *symbol)
 {
   PyObject *object = PyDict_GetItemString(PyModule_GetDict(PyImport_AddModule("__main__")), symbol);
-  if(!object) throw std::runtime_error("symbol not found: "s + symbol);
+  if(!object) fprintf(stderr, "undefined symbol: %s\n", symbol), exit(EXIT_FAILURE);
   return object;
 }
 
@@ -29,17 +29,29 @@ def fsolve(func, x, a):
     return list(opt.fsolve(func, x, a))
   )");
   fFsolve = Py_Resolve("fsolve");
+  Py_INCREF(fFsolve);
 }
 
-FSolver::~FSolver() { Py_Finalize(); }
+FSolver::~FSolver()
+{
+  Py_DECREF(fFsolve);
+  Py_XDECREF(fFunc);
+  Py_Finalize();
+}
 
-void FSolver::UpdateFunc(const char *func) { fFunc = Py_Resolve(func); }
+void FSolver::UpdateFunc(const char *func)
+{
+  Py_XDECREF(fFunc);
+  fFunc = Py_Resolve(func);
+  Py_INCREF(fFunc);
+}
 
 bool FSolver::Solve(std::vector<double> &x, const std::vector<double> &a)
 {
   // func
   if(fFunc == nullptr) UpdateFunc();
   PyObject *func = (PyObject *)fFunc;
+  Py_INCREF(func);
 
   // (a,)
   PyObject *args = PyTuple_New(1);
@@ -53,6 +65,7 @@ bool FSolver::Solve(std::vector<double> &x, const std::vector<double> &a)
 
   // fsolve(func, x, (a,))
   PyObject *result = PyObject_CallObject((PyObject *)fFsolve, tuple);
+  Py_DECREF(tuple);
   if(!result) {
     PyErr_Print();
     return false;
@@ -61,11 +74,12 @@ bool FSolver::Solve(std::vector<double> &x, const std::vector<double> &a)
   // x = fsolve(func, x, (a,))
   Py_ssize_t n = PyList_Size(result);
   if(n < 0) PyErr_Print(), exit(EXIT_FAILURE);
-  if((size_t)n != x.size()) throw std::logic_error("size mismatch: " + std::to_string(n) + " != " + std::to_string(x.size()));
+  if((size_t)n != x.size()) fprintf(stderr, "size mismatch: %zu != %zu\n", (size_t)n, x.size()), exit(EXIT_FAILURE);
   for(size_t i = 0; i < x.size(); i++) {
     x[i] = PyFloat_AsDouble(PyList_GetItem(result, i));
     if(PyErr_Occurred()) PyErr_Print(), exit(EXIT_FAILURE);
   }
+  Py_DECREF(result);
   return true;
 }
 
