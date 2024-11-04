@@ -20,7 +20,7 @@ public:
   bool Solve(std::vector<double> &x, const std::vector<double> &a);
 
   // Underlying interpreter operations.
-  // Use this for user-specified initialization function definition.
+  // Use this for function definition and user-specified initialization.
   void Exec(const char *source) const;
 
 private:
