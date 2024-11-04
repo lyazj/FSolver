@@ -24,7 +24,7 @@ def func(x, a):
   fSolver.Solve(x, a);
   for(double x0 : x) std::cout << std::fixed << std::setprecision(3) << " " << x0;
   std::cout << std::endl;
-  a = {2, 4};  // no solution
+  a = { 2, 4 };  // no solution
   fSolver.Solve(x, a);
   for(double x0 : x) std::cout << std::fixed << std::setprecision(3) << " " << x0;
   std::cout << std::endl;
